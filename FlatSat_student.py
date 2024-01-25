@@ -10,17 +10,18 @@ The provided functions are only for reference, you do not need to use them.
 You will need to complete the take_photo() function and configure the VARIABLES section
 """
 
-#AUTHOR: 
-#DATE:
+#AUTHOR: Tan Vu
+#DATE: 1/24/24
 
 #import libraries
 import time
-import board
+#import board
 from adafruit_lsm6ds.lsm6dsox import LSM6DSOX as LSM6DS
 from adafruit_lis3mdl import LIS3MDL
 from git import Repo
-from picamera2 import Picamera2
+from picamera2 import Picamera2, Preview
 import math
+from numpy import np
 
 #VARIABLES
 THRESHOLD = 0      #Any desired value from the accelerometer
@@ -77,13 +78,24 @@ def take_photo():
         if math.sqrt(accelx**2 + accely**2 + accelz**2) > THRESHOLD:
 
             #PAUSE
-            
+            time.sleep(1)
             #name = ""     #First Name, Last Initial  ex. MasonM
+            name = "TanV"
             #TAKE PHOTO
+            camera_config = picam2.create_still_configuration(
+                main={"size": (1920, 1080)}, 
+                lores={"size": (640, 480)}, 
+                display="lores"
+            )
+            picam2.configure(camera_config)
+            picam2.start_preview(Preview.QTGL)
+            picam2.start()
+            time.sleep(2)
+            picam2.capture_file(img_gen(name))
             #PUSH PHOTO TO GITHUB
-        
+            git_push()
         #PAUSE
-
+        time.sleep(1)
 
 def main():
     take_photo()
