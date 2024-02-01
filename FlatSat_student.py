@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 """
 The Python code you will write for this module should read
 acceleration data from the IMU. When a reading comes in that surpasses
@@ -15,18 +17,18 @@ You will need to complete the take_photo() function and configure the VARIABLES 
 
 #import libraries
 import time
-#import board
+import board
 from adafruit_lsm6ds.lsm6dsox import LSM6DSOX as LSM6DS
 from adafruit_lis3mdl import LIS3MDL
 from git import Repo
 from picamera2 import Picamera2, Preview
 import math
-from numpy import np
+import numpy as np
 
 #VARIABLES
-THRESHOLD = 0      #Any desired value from the accelerometer
-REPO_PATH = ""     #Your github repo path: ex. /home/pi/FlatSatChallenge
-FOLDER_PATH = ""   #Your image folder path in your GitHub repo: ex. /Images
+THRESHOLD = 10      #Any desired value from the accelerometer
+REPO_PATH = "/home/ccaaerospace/code/cubesat/"
+FOLDER_PATH = "images/"
 
 #imu and camera initialization
 i2c = board.I2C()
@@ -34,6 +36,12 @@ accel_gyro = LSM6DS(i2c)
 mag = LIS3MDL(i2c)
 picam2 = Picamera2()
 
+camera_config = picam2.create_still_configuration(
+    main={"size": (1920, 1080)}, 
+    lores={"size": (640, 480)}, 
+    display="lores"
+)
+picam2.configure(camera_config)
 
 def git_push():
     """
@@ -73,29 +81,23 @@ def take_photo():
     """
     while True:
         accelx, accely, accelz = accel_gyro.acceleration
-        
+        print(math.sqrt(accelx**2 + accely**2 + accelz**2))   
+        print(THRESHOLD)     
         #CHECKS IF READINGS ARE ABOVE THRESHOLD
         if math.sqrt(accelx**2 + accely**2 + accelz**2) > THRESHOLD:
 
             #PAUSE
-            time.sleep(1)
             #name = ""     #First Name, Last Initial  ex. MasonM
-            name = "TanV"
-            #TAKE PHOTO
-            camera_config = picam2.create_still_configuration(
-                main={"size": (1920, 1080)}, 
-                lores={"size": (640, 480)}, 
-                display="lores"
-            )
-            picam2.configure(camera_config)
-            picam2.start_preview(Preview.QTGL)
+            name = "why"
+
+            """ only uncomment with display """
+            # picam2.start_preview(Preview.QTGL)
+
             picam2.start()
-            time.sleep(2)
             picam2.capture_file(img_gen(name))
-            #PUSH PHOTO TO GITHUB
-            git_push()
+
         #PAUSE
-        time.sleep(1)
+        time.sleep(2)
 
 def main():
     take_photo()
