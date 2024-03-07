@@ -24,6 +24,7 @@ from git import Repo
 from picamera2 import Picamera2, Preview
 import math
 import numpy as np
+from pathlib import Path
 
 #VARIABLES
 THRESHOLD = 10      #Any desired value from the accelerometer
@@ -43,23 +44,23 @@ camera_config = picam2.create_still_configuration(
 )
 picam2.configure(camera_config)
 
-def git_push():
-    """
-    This function is complete. Stages, commits, and pushes new images to your GitHub repo.
-    """
-    try:
-        repo = Repo(REPO_PATH)
-        origin = repo.remote('origin')
-        print('added remote')
-        origin.pull()
-        print('pulled changes')
-        repo.git.add(REPO_PATH + FOLDER_PATH)
-        repo.index.commit('New Photo')
-        print('made the commit')
-        origin.push()
-        print('pushed changes')
-    except:
-        print('Couldn\'t upload to git')
+# def git_push():
+#     """
+#     This function is complete. Stages, commits, and pushes new images to your GitHub repo.
+#     """
+#     try:
+#         repo = Repo(REPO_PATH)
+#         origin = repo.remote('origin')
+#         print('added remote')
+#         origin.pull()
+#         print('pulled changes')
+#         repo.git.add(REPO_PATH + FOLDER_PATH)
+#         repo.index.commit('New Photo')
+#         print('made the commit')
+#         origin.push()
+#         print('pushed changes')
+#     except:
+#         print('Couldn\'t upload to git')
 
 
 def img_gen(name):
@@ -70,7 +71,8 @@ def img_gen(name):
         name (str): your name ex. MasonM
     """
     t = time.strftime("_%H%M%S")
-    imgname = (f'{REPO_PATH}/{FOLDER_PATH}/{name}{t}.jpg')
+    imgname = Path(f'{REPO_PATH}/{FOLDER_PATH}/{name}{t}.jpg')
+    print(f"generated: {imgname}")
     return imgname
 
 
@@ -82,7 +84,7 @@ def take_photo():
     while True:
         accelx, accely, accelz = accel_gyro.acceleration
         print(math.sqrt(accelx**2 + accely**2 + accelz**2))   
-        print(THRESHOLD)     
+        print(THRESHOLD)    
         #CHECKS IF READINGS ARE ABOVE THRESHOLD
         if math.sqrt(accelx**2 + accely**2 + accelz**2) > THRESHOLD:
 
@@ -105,3 +107,15 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# pip3 install --break adafruit-circuitpython-lis3mdl
+# pip3 install --break adafruit-circuitpython-lsm6ds
+# pip3 install --break adafruit-blinka
+# pip3 install --break GitPython
+
+# test if i2c is enabled
+# 0 -> enabled
+# 1 -> disable
+# sudo raspi-config nonint get_i2c
+# enable i2c (does not require reboot):
+# sudo raspi-config nonint do_i2c 0
