@@ -66,6 +66,7 @@ while True:
     print('imgBGR', imgBGR)
     print(array.shape)
     cv2.imwrite(filename="test2.png",img=imgBGR)
+    print("saved")
     cv2.imwrite(filename="bw.png",img=binaryImg)
 
 
