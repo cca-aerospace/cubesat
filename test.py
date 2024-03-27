@@ -49,20 +49,24 @@ while True:
     array = camera.capture_array()
     hsv = cv2.cvtColor(array, cv2.COLOR_BGR2HSV)
     img = cv2.cvtColor(array, cv2.COLOR_RGB2HSV)
-    lower_ = np.array([0,0,200])
+    bw = cv2.cvtColor(array, cv2.COLOR_BGR2GRAY)
+    lower_ = np.array([0,0,220])
     upper = np.array([180,255,255])
     mask = cv2.inRange(hsv, lower_, upper)
+    (T,binaryImg) = cv2.threshold(bw,200,255,cv2.THRESH_BINARY)
     cv2.imwrite("mask2.png",mask)
     result = cv2.bitwise_and(img,img, mask= mask)
+    print('img max:', img[::,].max())
     if img.max() >= 200:
         print("light is on")
-
     else:
         print("light is off")
     imgBGR = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
     print(img.max())
+    print('imgBGR', imgBGR)
     print(array.shape)
     cv2.imwrite(filename="test2.png",img=imgBGR)
+    cv2.imwrite(filename="bw.png",img=binaryImg)
 
 
 
