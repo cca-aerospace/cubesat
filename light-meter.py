@@ -9,6 +9,8 @@ import time
 from time import sleep
 import math
 import cv2
+import threading 
+import run
 
 
 import board
@@ -87,9 +89,9 @@ def collect_data(camera):
 
 
         # img_state: True if on, False if off
-        LED_state = img.max() >= 200
-        print('img max:', img[::,].max())
-        if img.max() >= 200:
+        LED_state = bw.max() >= 200
+        print('img max:', bw[::,].max())
+        if bw.max() >= 200:
             print("light is on")
         else:
             print("light is off")
@@ -119,23 +121,15 @@ def collect_data(camera):
     return train_data
 
 
-
-def main():
-
-    #configure picamera
+def lightMeter():
     camera = Picamera2()
-    config = camera.create_preview_configuration({'format': 'BGR888'})
-
+    config = camera.create_preview_configuration({'format': 'BGR888'}) 
     camera.configure(config)
-    camera.exposure_mode = 'auto'
-    # camera.brightness
+    camera.exposure_mode = 'spotlight'
     camera.awb_mode = 'auto'
     camera.start()
-
-    # idx 0 stores rotational displacement
-    # idx 1 stores light 'on' or 'off'
     test_data = []
-
+    
     while len(test_data) < 3:
         sleep(1)
         array = camera.capture_array()
@@ -154,6 +148,67 @@ def main():
         LED_state = img.max() >= 200
         print('img max:', img[::,].max())
         if img.max() >= 200:
+            print("light is on")
+        else:
+            print("light is off")
+            
+        imgBGR = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
+        #print('imgBGR', imgBGR)
+        #print(array.shape)
+        cv2.imwrite(filename="test2.png",img=imgBGR)
+        print("saved")
+        cv2.imwrite(filename="bw.png",img=binaryImg)
+    
+    
+    
+
+def main():
+
+    #configure picamera
+    camera = Picamera2()
+    config = camera.create_preview_configuration({'format': 'BGR888'})
+
+    camera.configure(config)
+    camera.exposure_mode = 'spotlight'
+    # camera.brightness
+    camera.awb_mode = 'auto'
+    camera.start()
+
+    # idx 0 stores rotational displacement
+    # idx 1 stores light 'on' or 'off'
+    test_data = []
+
+    while len(test_data) < 3:
+        sleep(1)
+        params = cv2.SimpleBlobDetector_Params()
+        params.filterByArea = True
+        params.minArea = 150
+        params.maxArea = 2000
+        detector = cv2.SimpleBlobDetector_create(params)
+        
+        
+        array = camera.capture_array()
+        hsv = cv2.cvtColor(array, cv2.COLOR_BGR2HSV)
+        img = cv2.cvtColor(array, cv2.COLOR_RGB2HSV)
+        bw = cv2.cvtColor(array, cv2.COLOR_BGR2GRAY)
+        mask = cv2.inRange(bw, 150, 255)
+
+        (T,binaryImg) = cv2.threshold(bw,200,255,cv2.THRESH_BINARY)
+        keypoints = detector.detect(binaryImg)
+        
+        img_key = cv2.drawKeypoints(img, keypoints, np.array([]), (0,50,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        cv2.imwrite("keypoints.png", img_key)
+        number_of_keypoints = len(detector.keypoints)
+        
+        
+        cv2.imwrite("mask2.png",mask)
+        result = cv2.bitwise_and(img,img, mask= mask)
+
+
+        # img_state: True if on, False if off
+        LED_state = number_of_keypoints > 0
+        print('img max:', img[::,].max())
+        if LED_state:
             print("light is on")
         else:
             print("light is off")
@@ -192,4 +247,5 @@ def main():
         else:
             print('position %s: couldnt pass threshold' % (i+1))
 
-if __name__ == "__main__": main()
+if __name__ == "__main__": 
+    main()
