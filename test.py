@@ -27,7 +27,7 @@ camera = picamera2.Picamera2()
 config = camera.create_preview_configuration({'format': 'BGR888'})
 
 camera.configure(config)
-camera.exposure_mode = 'auto'
+camera.exposure_mode = 'spotlight'
 # camera.brightness
 camera.awb_mode = 'auto'
 camera.start()
