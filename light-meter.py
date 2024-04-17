@@ -74,7 +74,7 @@ def collect_data(camera):
     # idx 1 stores light 'on' or 'off'
     train_data = []
 
-    while len(train_data) < 3:
+    while len(train_data) < 1:
         sleep(1)
         array = camera.capture_array()
         hsv = cv2.cvtColor(array, cv2.COLOR_BGR2HSV)
@@ -86,17 +86,14 @@ def collect_data(camera):
         (T,binaryImg) = cv2.threshold(bw,200,255,cv2.THRESH_BINARY)
         cv2.imwrite("mask2.png",mask)
         result = cv2.bitwise_and(img,img, mask= mask)
-
-
-        # img_state: True if on, False if off
-        LED_state = bw.max() >= 200
         print('img max:', bw[::,].max())
+        LED_state = bw.max() >= 200
         if bw.max() >= 200:
             print("light is on")
         else:
             print("light is off")
-            
         imgBGR = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
+        #print(img.max())
         #print('imgBGR', imgBGR)
         #print(array.shape)
         cv2.imwrite(filename="test2.png",img=imgBGR)
@@ -120,7 +117,7 @@ def collect_data(camera):
 
     return train_data
 
-
+'''
 def lightMeter():
     camera = Picamera2()
     config = camera.create_preview_configuration({'format': 'BGR888'}) 
@@ -130,54 +127,6 @@ def lightMeter():
     camera.start()
     test_data = []
     
-    while len(test_data) < 3:
-        sleep(1)
-        array = camera.capture_array()
-        hsv = cv2.cvtColor(array, cv2.COLOR_BGR2HSV)
-        img = cv2.cvtColor(array, cv2.COLOR_RGB2HSV)
-        bw = cv2.cvtColor(array, cv2.COLOR_BGR2GRAY)
-        lower_ = np.array([0,0,220])
-        upper = np.array([180,255,255])
-        mask = cv2.inRange(hsv, lower_, upper)
-        (T,binaryImg) = cv2.threshold(bw,200,255,cv2.THRESH_BINARY)
-        cv2.imwrite("mask2.png",mask)
-        result = cv2.bitwise_and(img,img, mask= mask)
-
-
-        # img_state: True if on, False if off
-        LED_state = img.max() >= 200
-        print('img max:', img[::,].max())
-        if img.max() >= 200:
-            print("light is on")
-        else:
-            print("light is off")
-            
-        imgBGR = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
-        #print('imgBGR', imgBGR)
-        #print(array.shape)
-        cv2.imwrite(filename="test2.png",img=imgBGR)
-        print("saved")
-        cv2.imwrite(filename="bw.png",img=binaryImg)
-    
-    
-    
-
-def main():
-
-    #configure picamera
-    camera = Picamera2()
-    config = camera.create_preview_configuration({'format': 'BGR888'})
-
-    camera.configure(config)
-    camera.exposure_mode = 'spotlight'
-    # camera.brightness
-    camera.awb_mode = 'auto'
-    camera.start()
-
-    # idx 0 stores rotational displacement
-    # idx 1 stores light 'on' or 'off'
-    test_data = []
-
     while len(test_data) < 3:
         sleep(1)
         params = cv2.SimpleBlobDetector_Params()
@@ -194,7 +143,7 @@ def main():
         mask = cv2.inRange(bw, 150, 255)
 
         (T,binaryImg) = cv2.threshold(bw,200,255,cv2.THRESH_BINARY)
-        keypoints = detector.detect(binaryImg)
+        keypoints = detector.detect(bw)
         
         img_key = cv2.drawKeypoints(img, keypoints, np.array([]), (0,50,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
         cv2.imwrite("keypoints.png", img_key)
@@ -219,6 +168,52 @@ def main():
         cv2.imwrite(filename="test2.png",img=imgBGR)
         print("saved")
         cv2.imwrite(filename="bw.png",img=binaryImg)
+'''
+    
+    
+
+def main():
+
+    #configure picamera
+    camera = Picamera2()
+    config = camera.create_preview_configuration({'format': 'BGR888'})
+
+    camera.configure(config)
+    camera.exposure_mode = 'spotlight'
+    # camera.brightness
+    camera.awb_mode = 'auto'
+    camera.start()
+
+    train_data = collect_data(camera)
+    # idx 0 stores rotational displacement
+    # idx 1 stores light 'on' or 'off'
+    test_data = []
+
+    while len(test_data) < 1:
+        sleep(1)
+        array = camera.capture_array()
+        hsv = cv2.cvtColor(array, cv2.COLOR_BGR2HSV)
+        img = cv2.cvtColor(array, cv2.COLOR_RGB2HSV)
+        bw = cv2.cvtColor(array, cv2.COLOR_BGR2GRAY)
+        lower_ = np.array([0,0,220])
+        upper = np.array([180,255,255])
+        mask = cv2.inRange(hsv, lower_, upper)
+        (T,binaryImg) = cv2.threshold(bw,200,255,cv2.THRESH_BINARY)
+        cv2.imwrite("mask2.png",mask)
+        result = cv2.bitwise_and(img,img, mask= mask)
+        print('img max:', bw[::,].max())
+        LED_state = bw.max() >= 200
+        if bw.max() >= 200:
+            print("light is on")
+        else:
+            print("light is off")
+        imgBGR = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
+        #print(img.max())
+        #print('imgBGR', imgBGR)
+        #print(array.shape)
+        cv2.imwrite(filename="test2.png",img=imgBGR)
+        print("saved")
+        cv2.imwrite(filename="bw.png",img=binaryImg)
 
         
 
@@ -237,7 +232,8 @@ def main():
 
     # compare train data and test data for three positions
     print('comparing data...')
-    train_data = collect_data(camera)
+    print('train data:', train_data)
+    print('test data:', test_data)
     for i in range(len(train_data)):
         if abs(train_data[i][0] - test_data[i][0]) < 20:
             if train_data[i][1] and not test_data[i][1]:

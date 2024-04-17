@@ -56,8 +56,8 @@ while True:
     (T,binaryImg) = cv2.threshold(bw,200,255,cv2.THRESH_BINARY)
     cv2.imwrite("mask2.png",mask)
     result = cv2.bitwise_and(img,img, mask= mask)
-    print('img max:', img[::,].max())
-    if img.max() >= 200:
+    print('img max:', bw[::,].max())
+    if bw.max() >= 200:
         print("light is on")
     else:
         print("light is off")
