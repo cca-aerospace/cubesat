@@ -1,0 +1,10 @@
+MISSION RESULTS
+-----------------------------------------------
+REGION 1: No significant change detected
+REGION 2: POWER OUTAGE
+REGION 3: No significant change detected
+REGION 4: No significant change detected
+
+REGION 1    REGION 2    REGION 3    REGION 4
+-61.76962   -60.44327   -59.34533   -56.60572
+-71.00646   -61.38205   -16.71638   -25.3529

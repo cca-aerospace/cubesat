@@ -73,8 +73,9 @@ def collect_data(camera):
     # idx 0 stores rotational displacement
     # idx 1 stores light 'on' or 'off'
     train_data = []
+    region = 1
 
-    while len(train_data) < 1:
+    while len(train_data) < 4:
         sleep(1)
         array = camera.capture_array()
         hsv = cv2.cvtColor(array, cv2.COLOR_BGR2HSV)
@@ -86,20 +87,20 @@ def collect_data(camera):
         (T,binaryImg) = cv2.threshold(bw,200,255,cv2.THRESH_BINARY)
         cv2.imwrite("mask2.png",mask)
         result = cv2.bitwise_and(img,img, mask= mask)
-        print('img max:', bw[::,].max())
+        # print('img max:', bw[::,].max())
         LED_state = bw.max() >= 200
         if bw.max() >= 200:
-            print("light is on")
+            print("REGION " + str(region) + ": LIGHT ON")
         else:
-            print("light is off")
+            print("REGION " + str(region) + ": LIGHT OFF")
         imgBGR = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
         #print(img.max())
         #print('imgBGR', imgBGR)
         #print(array.shape)
         cv2.imwrite(filename="test2.png",img=imgBGR)
-        print("saved")
+        # print("saved")
         cv2.imwrite(filename="bw.png",img=binaryImg)
-
+        region+=1
         
 
         # determine rotational displacement
@@ -108,11 +109,12 @@ def collect_data(camera):
         avg = 0
         for _ in range(50):
             rotational_displacement.append(get_rotation())
-        avg = sum(rotational_displacement) / len(rotational_displacement)
-        print('curr rotation:', avg)
+        avg = round(sum(rotational_displacement) / len(rotational_displacement), 5)
+        print('ROTATIONAL DISPLACEMENT:', avg)
         #camera.capture_file('light_on.png')
         train_data.append([avg, LED_state])
-        print(train_data)
+        # print(train_data)
+        print()
 
 
     return train_data
@@ -189,7 +191,9 @@ def main():
     # idx 1 stores light 'on' or 'off'
     test_data = []
 
-    while len(test_data) < 1:
+    region = 1
+
+    while len(test_data) < 4:
         sleep(1)
         array = camera.capture_array()
         hsv = cv2.cvtColor(array, cv2.COLOR_BGR2HSV)
@@ -201,20 +205,20 @@ def main():
         (T,binaryImg) = cv2.threshold(bw,200,255,cv2.THRESH_BINARY)
         cv2.imwrite("mask2.png",mask)
         result = cv2.bitwise_and(img,img, mask= mask)
-        print('img max:', bw[::,].max())
+        # print('img max:', bw[::,].max())
         LED_state = bw.max() >= 200
         if bw.max() >= 200:
-            print("light is on")
+            print("REGION " + str(region) + ": LIGHT ON")
         else:
-            print("light is off")
+            print("REGION " + str(region) + ": LIGHT OFF")
         imgBGR = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
         #print(img.max())
         #print('imgBGR', imgBGR)
         #print(array.shape)
         cv2.imwrite(filename="test2.png",img=imgBGR)
-        print("saved")
+        # print("saved")
         cv2.imwrite(filename="bw.png",img=binaryImg)
-
+        region+=1
         
 
         # determine rotational displacement
@@ -223,25 +227,32 @@ def main():
         avg = 0
         for _ in range(10):
             rotational_displacement.append(get_rotation())
-        avg = sum(rotational_displacement) / len(rotational_displacement)
-        print('curr rotation:', avg)
+        avg = round(sum(rotational_displacement) / len(rotational_displacement), 5)
+        print('ROTATIONAL DISPLACEMENT:', avg)
         #camera.capture_file('light_on.png')
         test_data.append([avg, LED_state])
-        print(test_data)
+        # print(test_data)
+        print()
+
+        
         
 
     # compare train data and test data for three positions
-    print('comparing data...')
-    print('train data:', train_data)
-    print('test data:', test_data)
+    # print('comparing data...')
+    # print('train data:', train_data)
+    # print('test data:', test_data)
+    print('MISSION RESULTS')
+    print('-----------------------------------------------')
     for i in range(len(train_data)):
-        if abs(train_data[i][0] - test_data[i][0]) < 20:
-            if train_data[i][1] and not test_data[i][1]:
-                print('position %s had a power outage' % (i+1))
-            else:
-                print('position %s: no significant change detected' % (i+1))
+        if train_data[i][1] and not test_data[i][1]:
+            print('REGION %s: POWER OUTAGE' % (i+1))
         else:
-            print('position %s: couldnt pass threshold' % (i+1))
+            print('REGION %s: No significant change detected' % (i+1))
+    
+    print()
+    print("REGION 1    REGION 2    REGION 3    REGION 4")
+    print(train_data[0][0], ' ', train_data[1][0], ' ', train_data[2][0], ' ', train_data[3][0])
+    print(test_data[0][0], ' ', test_data[1][0],' ', test_data[2][0],' ', test_data[3][0])
 
 if __name__ == "__main__": 
     main()
